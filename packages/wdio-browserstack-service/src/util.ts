@@ -484,7 +484,7 @@ export const validateCapsWithA11y = (deviceName?: any, platformMeta?: { [key: st
 
         const validBrowsers = ['chrome', 'chromefortesting', 'safari']
         if (!browserName || !validBrowsers.includes(browserName)) {
-            BStackLogger.warn(`Accessibility Automation supports Chrome 95+, Chrome for Testing 141+, and Safari 16.5+. Current browser: ${browserName}`)
+            BStackLogger.warn(`Accessibility Automation supports Chrome 95+, Chrome for Testing 141+, and Safari 18.4+. Current browser: ${browserName}`)
             return false
         }
 
@@ -531,7 +531,7 @@ export const validateCapsWithNonBstackA11y = (browserName?: string | undefined, 
         // Support Chrome, Chrome for Testing (ChromeForTesting), and Safari on non-BrowserStack infrastructure
         const validBrowsers = ['chrome', 'chromefortesting', 'safari']
         if (!browser || !validBrowsers.includes(browser)) {
-            BStackLogger.warn('Accessibility Automation on non-BrowserStack infrastructure supports Chrome 100+, Chrome for Testing 141+, and Safari 16.5+.')
+            BStackLogger.warn('Accessibility Automation on non-BrowserStack infrastructure supports Chrome 100+, Chrome for Testing 141+, and Safari 18.4+.')
             return false
         }
 

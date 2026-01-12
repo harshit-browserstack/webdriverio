@@ -81,13 +81,13 @@ export const SUPPORTED_BROWSERS_FOR_ACCESSIBILITY = ['chrome', 'chromefortesting
 export const MIN_BROWSER_VERSIONS_A11Y = {
     chrome: 95,
     chromefortesting: 141,
-    safari: 16.5
+    safari: 18.4
 } as const
 
 export const MIN_BROWSER_VERSIONS_A11Y_NON_BSTACK = {
     chrome: 100,
     chromefortesting: 141,
-    safari: 16.5
+    safari: 18.4
 } as const
 
 export const TCG_URL = 'https://tcg.browserstack.com'
