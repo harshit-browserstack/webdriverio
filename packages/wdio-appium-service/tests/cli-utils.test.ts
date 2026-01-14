@@ -3,7 +3,14 @@ import { spawn, execSync, exec } from 'node:child_process'
 import os from 'node:os'
 import url from 'node:url'
 import { resolve as resolveModule } from 'import-meta-resolve'
-import { extractPortFromCliArgs, determineAppiumCliCommand, openBrowser, startAppiumForCli, checkInspectorPluginInstalled } from '../src/cli-utils.js'
+import {
+    extractPortFromCliArgs,
+    determineAppiumCliCommand,
+    openBrowser,
+    removePortFromArgs,
+    startAppiumForCli,
+    checkInspectorPluginInstalled
+} from '../src/cli-utils.js'
 
 vi.mock('node:child_process', () => ({
     spawn: vi.fn(),
@@ -53,6 +60,45 @@ describe('extractPortFromCliArgs', () => {
     })
 })
 
+describe('removePortFromArgs', () => {
+    it('should remove --port=5555 format from args', () => {
+        const args = ['--port=5555', '--log-timestamp', '--allow-cors']
+        removePortFromArgs(args)
+        expect(args).toEqual(['--log-timestamp', '--allow-cors'])
+    })
+
+    it('should remove --port 5555 format from args (two separate arguments)', () => {
+        const args = ['--port', '5555', '--log-timestamp', '--allow-cors']
+        removePortFromArgs(args)
+        expect(args).toEqual(['--log-timestamp', '--allow-cors'])
+    })
+
+    it('should not modify args when no --port argument exists', () => {
+        const args = ['--log-timestamp', '--allow-cors']
+        const originalArgs = [...args]
+        removePortFromArgs(args)
+        expect(args).toEqual(originalArgs)
+    })
+
+    it('should handle empty args array', () => {
+        const args: string[] = []
+        removePortFromArgs(args)
+        expect(args).toEqual([])
+    })
+
+    it('should remove all --port arguments when multiple exist', () => {
+        const args = ['--port=8080', '--log-timestamp', '--port=4723', '--allow-cors']
+        removePortFromArgs(args)
+        expect(args).toEqual(['--log-timestamp', '--allow-cors'])
+    })
+
+    it('should remove all --port arguments in mixed formats', () => {
+        const args = ['--port=8080', '--log-timestamp', '--port', '4723', '--allow-cors', '--port=9999']
+        removePortFromArgs(args)
+        expect(args).toEqual(['--log-timestamp', '--allow-cors'])
+    })
+})
+
 describe('determineAppiumCliCommand', () => {
     beforeEach(() => {
         vi.clearAllMocks()
@@ -63,7 +109,7 @@ describe('determineAppiumCliCommand', () => {
         vi.mocked(resolveModule).mockResolvedValueOnce(mockPath)
 
         const result = await determineAppiumCliCommand()
-        expect(result).toBe('/project/node_modules/appium/index.js')
+        expect(result).toBe(url.fileURLToPath(mockPath))
         expect(resolveModule).toHaveBeenCalled()
     })
 
@@ -74,7 +120,7 @@ describe('determineAppiumCliCommand', () => {
             .mockResolvedValueOnce(mockPath)
 
         const result = await determineAppiumCliCommand()
-        expect(result).toBe('/global/appium/index.js')
+        expect(result).toBe(url.fileURLToPath(mockPath))
         expect(resolveModule).toHaveBeenCalledTimes(2)
     })
 
@@ -87,7 +133,7 @@ describe('determineAppiumCliCommand', () => {
         vi.mocked(resolveModule).mockResolvedValueOnce(mockPath)
 
         const result = await determineAppiumCliCommand()
-        expect(result).toBe('/usr/lib/node_modules/appium/index.js')
+        expect(result).toBe(url.fileURLToPath(mockPath))
         expect(execSync).toHaveBeenCalledWith('npm config get prefix', { encoding: 'utf-8' })
     })
 
