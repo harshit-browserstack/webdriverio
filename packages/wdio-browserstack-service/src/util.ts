@@ -43,7 +43,8 @@ import {
     CLI_DEBUG_LOGS_FILE,
     WDIO_NAMING_PREFIX,
     MIN_BROWSER_VERSIONS_A11Y,
-    MIN_BROWSER_VERSIONS_A11Y_NON_BSTACK
+    MIN_BROWSER_VERSIONS_A11Y_NON_BSTACK,
+    SUPPORTED_BROWSERS_FOR_ACCESSIBILITY
 } from './constants.js'
 import CrashReporter from './crash-reporter.js'
 import { BStackLogger } from './bstackLogger.js'
@@ -484,7 +485,7 @@ export const validateCapsWithA11y = (deviceName?: any, platformMeta?: { [key: st
         const browserName = platformMeta?.browser_name?.toLowerCase()
         const browserVersion = platformMeta?.browser_version
 
-        const validBrowsers = ['chrome', 'chromefortesting', 'safari']
+        const validBrowsers = SUPPORTED_BROWSERS_FOR_ACCESSIBILITY
         if (!browserName || !validBrowsers.includes(browserName)) {
             BStackLogger.warn(`Accessibility Automation supports Chrome 95+, Chrome for Testing 141+, and Safari 18.4+. Current browser: ${browserName}`)
             return false
