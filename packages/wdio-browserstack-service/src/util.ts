@@ -708,7 +708,15 @@ export const getA11yResultsSummary = PerformanceTester.measureWrapper(PERFORMANC
     }
 })
 
-export const stopBuildUpstream = PerformanceTester.measureWrapper(PERFORMANCE_SDK_EVENTS.TESTHUB_EVENTS.STOP, o11yErrorHandler(async function stopBuildUpstream() {
+/**
+ * Stop the TestHub build (Direct flow).
+ * @param {string} [signal] - Optional POSIX signal name (e.g. 'SIGINT'). When set, includes
+ *   `finished_at` and `finished_metadata: [{reason: 'user_killed', signal, failure_data: ''}]`
+ *   in the PUT payload so the TestHub dashboard renders "Stopped/Aborted" instead of "Unknown".
+ *   Mirrors browserstack-node-agent `src/helpers/testhub/testhubHandler.js TestHubHandler.stop(signal)`
+ *   (SDK-6050).
+ */
+export const stopBuildUpstream = PerformanceTester.measureWrapper(PERFORMANCE_SDK_EVENTS.TESTHUB_EVENTS.STOP, o11yErrorHandler(async function stopBuildUpstream(signal: NodeJS.Signals | null = null) {
     const stopBuildUsage = UsageStats.getInstance().stopBuildUsage
     stopBuildUsage.triggered()
     if (!process.env[TESTOPS_BUILD_COMPLETED_ENV]) {
@@ -727,8 +735,19 @@ export const stopBuildUpstream = PerformanceTester.measureWrapper(PERFORMANCE_SD
             message: 'Token/buildID is undefined, build creation might have failed'
         }
     }
-    const data = {
+    const data: Record<string, unknown> = {
         'stop_time': (new Date()).toISOString()
+    }
+    if (signal) {
+        // SDK-6050: signal-aware build stop. Server reads `finished_metadata[0]` and
+        // marks the build "Stopped" instead of the "Unknown / inactivity timeout" state.
+        data['finished_at'] = data['stop_time']
+        data['finished_metadata'] = [{
+            reason: 'user_killed',
+            signal,
+            failure_data: ''
+        }]
+        BStackLogger.debug(`[STOP_BUILD] signal=${signal} reason=user_killed`)
     }
 
     try {

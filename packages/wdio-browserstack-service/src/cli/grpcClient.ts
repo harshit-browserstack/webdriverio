@@ -244,12 +244,17 @@ export class GrpcClient {
 
     /**
      * Stop the bin session
+     * @param {string} [signal] - Optional POSIX signal name. When set, populates
+     *   `exitSignal`, `exitReason='user_killed'`, `exitCode=1` on the StopBinSessionRequest
+     *   so the binary's testhub `onStop` (`browserstack-binary/packages/@browserstack/testhub/index.js:63-89`)
+     *   reads them and pushes `finished_metadata: [{reason, signal}]` to the TestHub stop API.
+     *   Mirrors browserstack-node-agent `src/bin/v2/grpcClient.js stopBinSession()` (SDK-6050).
      * @returns {Promise<void>}
      * @private
      */
-    async stopBinSession() {
+    async stopBinSession(signal: NodeJS.Signals | null = null) {
         PerformanceTester.start(PERFORMANCE_SDK_EVENTS.EVENTS.SDK_CLI_ON_STOP)
-        this.logger.debug('Stopping bin session')
+        this.logger.debug(`Stopping bin session${signal ? ` (signal=${signal})` : ''}`)
 
         try {
             if (!this.binSessionId) {
@@ -261,12 +266,18 @@ export class GrpcClient {
             }
 
             const clientWorkerId = CLIUtils.getClientWorkerId()
-            const request = StopBinSessionRequestConstructor.create({
+            const requestPayload: Record<string, unknown> = {
                 binSessionId: this.binSessionId
-            })
+            }
+            if (signal) {
+                requestPayload.exitSignal = signal
+                requestPayload.exitReason = 'user_killed'
+                requestPayload.exitCode = 1
+            }
+            const request = StopBinSessionRequestConstructor.create(requestPayload)
             // Add clientWorkerId to request (proto field 500)
             ;(request as unknown as Record<string, unknown>).clientWorkerId = clientWorkerId
-            this.logger.debug(`StopBinSession with clientWorkerId: ${clientWorkerId}`)
+            this.logger.debug(`StopBinSession with clientWorkerId: ${clientWorkerId}${signal ? ` exitSignal=${signal} exitReason=user_killed` : ''}`)
 
             // Get response from gRPC call
             const stopBinSessionPromise = promisify(this.client!.stopBinSession).bind(this.client!)

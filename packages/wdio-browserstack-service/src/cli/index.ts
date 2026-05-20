@@ -327,14 +327,18 @@ export class BrowserstackCLI {
 
     /**
      * Stop the CLI
+     * @param {string} [signal] - Optional POSIX signal name (e.g. 'SIGINT') when stop is
+     *   triggered by a process signal. Threaded into the gRPC StopBinSessionRequest so the
+     *   binary can mark TestHub `finished_metadata.{reason:'user_killed', signal}` —
+     *   mirrors browserstack-node-agent's `intExitHandler`/`stopBinSession` (see SDK-6050).
      * @returns {Promise<void>}
      */
-    async stop() {
+    async stop(signal: NodeJS.Signals | null = null) {
         PerformanceTester.start(PerformanceEvents.SDK_CLI_ON_STOP)
-        this.logger.debug('stop: CLI stop triggered')
+        this.logger.debug(`stop: CLI stop triggered${signal ? ` (signal=${signal})` : ''}`)
         try {
             if (this.isMainConnected) {
-                const response = await GrpcClient.getInstance().stopBinSession()
+                const response = await GrpcClient.getInstance().stopBinSession(signal)
                 BStackLogger.debug(`stop: stopBinSession response=${JSON.stringify(response)}`)
             }
 
