@@ -13,6 +13,7 @@ import type { Command } from '../../scripts/accessibility-scripts.js'
 import accessibilityScripts from '../../scripts/accessibility-scripts.js'
 import { _getParamsForAppAccessibility, formatString, getAppA11yResults, getAppA11yResultsSummary, shouldScanTestForAccessibility, validateCapsWithA11y, validateCapsWithAppA11y, isBrowserstackSession } from '../../util.js'
 import { AutomationFrameworkConstants } from '../frameworks/constants/automationFrameworkConstants.js'
+import { ACCESSIBILITY_WRAP_EXCLUDED_COMMANDS } from '../../constants.js'
 import util from 'node:util'
 import type { Accessibility } from '@browserstack/wdio-browserstack-service'
 import PerformanceTester from '../../instrumentation/performance/performance-tester.js'
@@ -138,6 +139,10 @@ export default class AccessibilityModule extends BaseModule {
             if (this.scriptInstance.commandsToWrap && this.scriptInstance.commandsToWrap.length > 0) {
                 this.scriptInstance.commandsToWrap
                     .filter((command) => command.name && command.class)
+                    // Skip synchronous chainable commands (e.g. `action`) — the async
+                    // wrapper would turn their return value into a Promise and break
+                    // chaining. See SDK-6265.
+                    .filter((command) => !ACCESSIBILITY_WRAP_EXCLUDED_COMMANDS.includes(command.name))
                     .forEach((command) => {
                         browser.overwriteCommand(
                             // @ts-expect-error fix type

@@ -73,6 +73,7 @@ import {
 import accessibilityScripts from './scripts/accessibility-scripts.js'
 import PerformanceTester from './instrumentation/performance/performance-tester.js'
 import * as PERFORMANCE_SDK_EVENTS from './instrumentation/performance/constants.js'
+import { ACCESSIBILITY_WRAP_EXCLUDED_COMMANDS } from './constants.js'
 
 import { BStackLogger } from './bstackLogger.js'
 
@@ -254,6 +255,10 @@ class _AccessibilityHandler {
 
         accessibilityScripts.commandsToWrap
             .filter((command) => command.name && command.class)
+            // Skip synchronous chainable commands (e.g. `action`) — the async
+            // wrapper would turn their return value into a Promise and break
+            // chaining. See SDK-6265.
+            .filter((command) => !ACCESSIBILITY_WRAP_EXCLUDED_COMMANDS.includes(command.name))
             .forEach((command) => {
                 const browser = this._browser as WebdriverIO.Browser
                 try {

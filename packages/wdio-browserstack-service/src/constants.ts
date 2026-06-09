@@ -62,6 +62,16 @@ export const PERCY_DOM_CHANGING_COMMANDS_ENDPOINTS = [
     '/session/:sessionId/appium/device/shake'
 ]
 
+/**
+ * Commands that synchronously return a chainable builder (rather than a Promise)
+ * and therefore must NOT be wrapped by the accessibility command wrapper. The
+ * wrapper is async, so wrapping a synchronous command converts its return value
+ * into a Promise and breaks chaining (e.g. `browser.action('pointer').move(...)`
+ * fails with "move is not a function" because `action` now resolves to a Promise).
+ * See SDK-6265.
+ */
+export const ACCESSIBILITY_WRAP_EXCLUDED_COMMANDS = ['action']
+
 export const CAPTURE_MODES = ['click', 'auto', 'screenshot', 'manual', 'testcase']
 export const LOG_KIND_USAGE_MAP = {
     'TEST_LOG': 'log',
