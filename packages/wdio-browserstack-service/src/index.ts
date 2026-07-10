@@ -20,6 +20,9 @@ export * from './types.js'
 declare global {
     namespace WebdriverIO {
         interface ServiceOption extends BrowserstackConfig {}
+        interface Browser {
+            setCustomTags: (key: string, value: string) => Promise<void>
+        }
     }
     interface State {
         value: number,
